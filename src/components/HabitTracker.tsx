@@ -20,6 +20,9 @@ const PALETTE = [
   { name: 'amber',  hex: '#f59e0b' },
   { name: 'rose',   hex: '#f43f5e' },
   { name: 'cyan',   hex: '#06b6d4' },
+  { name: 'orange', hex: '#f97316' },
+  { name: 'teal',   hex: '#14b8a6' },
+  { name: 'lime',   hex: '#84cc16' },
 ]
 
 export default function HabitTracker({

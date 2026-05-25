@@ -23,7 +23,8 @@ export interface Task {
   category_id: string | null
   title: string
   note?: string
-  due_date?: string // YYYY-MM-DD
+  planned_date?: string // YYYY-MM-DD — when the user plans to do it (drives visibility)
+  due_date?: string     // YYYY-MM-DD — hard deadline
   estimated_minutes: number
   status: 'open' | 'done'
   postponed_count: number

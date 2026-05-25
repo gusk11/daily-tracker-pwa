@@ -8,11 +8,13 @@ interface TodoFormProps {
 }
 
 export default function TodoForm({ categories, onAddTask }: TodoFormProps) {
-  const [title, setTitle]           = useState('')
-  const [categoryId, setCategoryId] = useState<string | null>(null)
-  const [dueDate, setDueDate]       = useState('')
-  const [minutes, setMinutes]       = useState(0)
-  const [note, setNote]             = useState('')
+  const today = new Date().toISOString().split('T')[0]
+  const [title, setTitle]             = useState('')
+  const [categoryId, setCategoryId]   = useState<string | null>(null)
+  const [plannedDate, setPlannedDate] = useState(today)
+  const [dueDate, setDueDate]         = useState('')
+  const [minutes, setMinutes]         = useState(0)
+  const [note, setNote]               = useState('')
 
   const handleSubmit = () => {
     if (!title.trim()) return
@@ -20,6 +22,7 @@ export default function TodoForm({ categories, onAddTask }: TodoFormProps) {
       category_id: categoryId,
       title: title.trim(),
       note: note || undefined,
+      planned_date: plannedDate || undefined,
       due_date: dueDate || undefined,
       estimated_minutes: minutes,
       status: 'open',
@@ -27,6 +30,7 @@ export default function TodoForm({ categories, onAddTask }: TodoFormProps) {
     })
     setTitle('')
     setCategoryId(null)
+    setPlannedDate(today)
     setDueDate('')
     setMinutes(0)
     setNote('')
@@ -62,7 +66,17 @@ export default function TodoForm({ categories, onAddTask }: TodoFormProps) {
         </div>
 
         <div>
-          <label className="block text-xs text-[#64748b] mb-1.5 uppercase tracking-wide">Fällig am</label>
+          <label className="block text-xs text-[#64748b] mb-1.5 uppercase tracking-wide">Geplant für</label>
+          <input
+            type="date"
+            value={plannedDate}
+            onChange={e => setPlannedDate(e.target.value)}
+            className={inputCls}
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs text-[#64748b] mb-1.5 uppercase tracking-wide">Fälligkeitsdatum (Deadline)</label>
           <input
             type="date"
             value={dueDate}

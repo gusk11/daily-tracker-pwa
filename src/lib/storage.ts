@@ -141,7 +141,21 @@ export const loadTasks = async (): Promise<Task[]> => {
   })
 }
 
-// IndexedDB: Habit Checks
+// IndexedDB: Habit Checks (all at once, mirrors saveTasks pattern)
+export const saveHabitChecks = async (checks: HabitCheck[]) => {
+  const database = await getDB()
+  const tx = database.transaction(['habitChecks'], 'readwrite')
+  const store = tx.objectStore('habitChecks')
+  store.clear()
+  for (const check of checks) {
+    store.add(check)
+  }
+  return new Promise((resolve, reject) => {
+    tx.oncomplete = () => resolve(undefined)
+    tx.onerror = () => reject(tx.error)
+  })
+}
+
 export const saveHabitCheck = async (check: HabitCheck) => {
   const database = await getDB()
   const tx = database.transaction(['habitChecks'], 'readwrite')

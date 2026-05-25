@@ -1,6 +1,5 @@
 import type { Task, Category } from '../lib/types'
-import { getTasksSortedByDueDate } from '../lib/calculations'
-import { isPastDate, isToday } from '../lib/dates'
+import { getMonday, getSunday, getToday } from '../lib/dates'
 
 interface TodoBoardProps {
   tasks: Task[]
@@ -30,6 +29,83 @@ const TrashIcon = () => (
   </svg>
 )
 
+interface TaskCardProps {
+  task: Task
+  categories: Category[]
+  onComplete: () => void
+  onPostpone: () => void
+  onDelete: () => void
+  dimmed?: boolean
+}
+
+function TaskCard({ task, categories, onComplete, onPostpone, onDelete, dimmed }: TaskCardProps) {
+  const category = task.category_id ? categories.find(c => c.id === task.category_id) : null
+  const today = getToday()
+  const isOverdue = task.due_date && task.due_date < today
+  const isDueToday = task.due_date === today
+  const isDueSoon = task.due_date && task.due_date > today
+  const isWarnPostpone = task.postponed_count >= 2
+
+  return (
+    <div
+      className={`bg-[#0d1f35] rounded-xl border border-[#1e3a52] px-4 py-3 transition-opacity ${dimmed ? 'opacity-60' : ''}`}
+      style={isWarnPostpone ? { borderLeftColor: '#ef4444', borderLeftWidth: 3 } : undefined}
+    >
+      <div className="flex items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-[#f1f5f9] leading-snug">{task.title}</p>
+          {task.note && <p className="text-xs text-[#64748b] mt-0.5 truncate">{task.note}</p>}
+
+          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+            {category && (
+              <span
+                className="text-xs px-2 py-0.5 rounded-full font-medium"
+                style={{ backgroundColor: (category.color || '#38bdf8') + '20', color: category.color || '#38bdf8' }}
+              >
+                {category.name}
+              </span>
+            )}
+            {task.due_date && (
+              <span className={`text-xs font-medium ${isOverdue ? 'text-[#ef4444]' : isDueToday ? 'text-[#f97316]' : isDueSoon ? 'text-[#64748b]' : ''}`}>
+                {isOverdue ? `Fällig: ${task.due_date}` : isDueToday ? 'Deadline: heute' : `Deadline: ${task.due_date}`}
+              </span>
+            )}
+            {task.estimated_minutes > 0 && (
+              <span className="text-xs text-[#64748b]">{task.estimated_minutes} min</span>
+            )}
+            {task.postponed_count > 0 && (
+              <span className={`text-xs ${isWarnPostpone ? 'text-[#ef4444]' : 'text-[#f97316]'}`}>
+                {task.postponed_count}× verschoben
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex gap-1.5 mt-3">
+        <button
+          onClick={onComplete}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 text-xs font-medium hover:bg-[#22c55e]/20 transition-colors"
+        >
+          <CheckIcon /> Erledigt
+        </button>
+        <button
+          onClick={onPostpone}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#162d47] text-[#64748b] border border-[#1e3a52] text-xs font-medium hover:text-[#f1f5f9] transition-colors"
+        >
+          <ArrowIcon /> Verschieben
+        </button>
+        <button
+          onClick={onDelete}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/20 text-xs font-medium hover:bg-[#ef4444]/20 transition-colors ml-auto"
+        >
+          <TrashIcon />
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function TodoBoard({
   tasks,
   categories,
@@ -38,92 +114,78 @@ export default function TodoBoard({
   onPostponeTask,
   onDeleteTask,
 }: TodoBoardProps) {
+  const weekStart = getMonday(selectedDate)
+  const weekEnd = getSunday(selectedDate)
+
   const openTasks = tasks.filter(t => t.status === 'open')
-  const sortedTasks = getTasksSortedByDueDate(openTasks)
+
+  // Tasks planned for selected date (or overdue planned tasks shown on today)
+  const todayTasks = openTasks.filter(t => {
+    if (t.planned_date) return t.planned_date === selectedDate
+    // Legacy tasks without planned_date: show if due_date matches or no due_date set
+    return !t.due_date || t.due_date === selectedDate
+  })
+
+  // Tasks planned for this week (but not today)
+  const weekTasks = openTasks.filter(t => {
+    if (todayTasks.includes(t)) return false
+    if (!t.planned_date) return false
+    return t.planned_date > selectedDate && t.planned_date >= weekStart && t.planned_date <= weekEnd
+  })
 
   return (
-    <div className="px-5 pb-4">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-base font-semibold text-[#f1f5f9]">Aufgaben</h2>
-        {openTasks.length > 0 && (
-          <span className="text-xs text-[#64748b] bg-[#162d47] px-2.5 py-0.5 rounded-full">
-            {openTasks.length} offen
-          </span>
+    <div className="px-5 pb-4 space-y-5">
+      {/* Today's tasks */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-[#f1f5f9]">Heutige Aufgaben</h2>
+          {todayTasks.length > 0 && (
+            <span className="text-xs text-[#64748b] bg-[#162d47] px-2.5 py-0.5 rounded-full">
+              {todayTasks.length}
+            </span>
+          )}
+        </div>
+
+        {todayTasks.length === 0 ? (
+          <p className="text-sm text-[#64748b] py-4 text-center">Keine Aufgaben für heute geplant.</p>
+        ) : (
+          <div className="space-y-2">
+            {todayTasks.map(task => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                categories={categories}
+                onComplete={() => onCompleteTask(task.id, selectedDate)}
+                onPostpone={() => onPostponeTask(task.id)}
+                onDelete={() => onDeleteTask(task.id)}
+              />
+            ))}
+          </div>
         )}
       </div>
 
-      {sortedTasks.length === 0 ? (
-        <div className="text-center py-8 text-[#64748b] text-sm">
-          Alle Aufgaben erledigt
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {sortedTasks.map(task => {
-            const isOverdue = task.due_date && isPastDate(task.due_date) && !isToday(task.due_date)
-            const category = task.category_id ? categories.find(c => c.id === task.category_id) : null
-            const isWarnPostpone = task.postponed_count >= 2
-
-            return (
-              <div
+      {/* This week's tasks */}
+      {weekTasks.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-[#64748b] uppercase tracking-wide">Diese Woche</h2>
+            <span className="text-xs text-[#64748b] bg-[#162d47] px-2.5 py-0.5 rounded-full">
+              {weekTasks.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {weekTasks.map(task => (
+              <TaskCard
                 key={task.id}
-                className="bg-[#0d1f35] rounded-xl border border-[#1e3a52] px-4 py-3"
-                style={isWarnPostpone ? { borderLeftColor: '#ef4444', borderLeftWidth: 3 } : undefined}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium leading-snug truncate ${isOverdue ? 'text-[#ef4444]' : 'text-[#f1f5f9]'}`}>
-                      {task.title}
-                    </p>
-                    {task.note && <p className="text-xs text-[#64748b] mt-0.5 truncate">{task.note}</p>}
-                    <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                      {category && (
-                        <span
-                          className="text-xs px-2 py-0.5 rounded-full font-medium"
-                          style={{ backgroundColor: (category.color || '#38bdf8') + '20', color: category.color || '#38bdf8' }}
-                        >
-                          {category.name}
-                        </span>
-                      )}
-                      {task.due_date && (
-                        <span className={`text-xs ${isOverdue ? 'text-[#ef4444]' : 'text-[#64748b]'}`}>
-                          {isOverdue ? 'Überfällig' : task.due_date === selectedDate ? 'Heute' : 'Bald'}
-                        </span>
-                      )}
-                      {task.estimated_minutes > 0 && (
-                        <span className="text-xs text-[#64748b]">{task.estimated_minutes} min</span>
-                      )}
-                      {task.postponed_count > 0 && (
-                        <span className={`text-xs ${isWarnPostpone ? 'text-[#ef4444]' : 'text-[#f97316]'}`}>
-                          {task.postponed_count}× verschoben
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-1.5 mt-3">
-                  <button
-                    onClick={() => onCompleteTask(task.id, selectedDate)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#22c55e]/10 text-[#22c55e] border border-[#22c55e]/20 text-xs font-medium hover:bg-[#22c55e]/20 transition-colors"
-                  >
-                    <CheckIcon /> Erledigt
-                  </button>
-                  <button
-                    onClick={() => onPostponeTask(task.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#162d47] text-[#64748b] border border-[#1e3a52] text-xs font-medium hover:text-[#f1f5f9] transition-colors"
-                  >
-                    <ArrowIcon /> Verschieben
-                  </button>
-                  <button
-                    onClick={() => onDeleteTask(task.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/20 text-xs font-medium hover:bg-[#ef4444]/20 transition-colors ml-auto"
-                  >
-                    <TrashIcon />
-                  </button>
-                </div>
-              </div>
-            )
-          })}
+                task={task}
+                categories={categories}
+                onComplete={() => onCompleteTask(task.id, selectedDate)}
+                onPostpone={() => onPostponeTask(task.id)}
+                onDelete={() => onDeleteTask(task.id)}
+                dimmed
+              />
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -3,7 +3,7 @@ import type { Task, Habit, HabitCheck, Category, DailyReview, StoreState, StoreA
 import {
   saveHabits, loadHabits, saveCategories, loadCategories,
   saveSelectedDate, loadSelectedDate, saveTasks, loadTasks,
-  loadHabitChecks, saveDailyReview,
+  loadHabitChecks, saveHabitChecks, saveDailyReview,
   loadAllReviews, importData, initDB
 } from '../lib/storage'
 import { generateId, debounce } from '../lib/utils'
@@ -213,6 +213,7 @@ export const useStore = () => {
   const debouncedSaveHabits = useCallback(debounce(saveHabits, 500), [])
   const debouncedSaveCategories = useCallback(debounce(saveCategories, 500), [])
   const debouncedSaveTasks = useCallback(debounce(saveTasks, 500), [])
+  const debouncedSaveHabitChecks = useCallback(debounce(saveHabitChecks, 500), [])
 
   useEffect(() => {
     debouncedSaveHabits(state.habits)
@@ -225,6 +226,10 @@ export const useStore = () => {
   useEffect(() => {
     debouncedSaveTasks(state.tasks)
   }, [state.tasks, debouncedSaveTasks])
+
+  useEffect(() => {
+    debouncedSaveHabitChecks(state.habitChecks)
+  }, [state.habitChecks, debouncedSaveHabitChecks])
 
   // Actions
   const actions: StoreActions = {
@@ -289,10 +294,11 @@ export const useStore = () => {
       const task = state.tasks.find(t => t.id === id)
       if (!task) return
 
-      const nextDate = task.due_date ? getNextDay(task.due_date) : getNextDay(state.selectedDate)
+      const baseDate = task.planned_date || state.selectedDate
+      const nextDate = getNextDay(baseDate)
 
       actions.updateTask(id, {
-        due_date: nextDate,
+        planned_date: nextDate,
         postponed_count: (task.postponed_count || 0) + 1,
         last_postponed_at: new Date().toISOString(),
       })
