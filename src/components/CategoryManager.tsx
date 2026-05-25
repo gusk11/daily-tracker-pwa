@@ -1,7 +1,5 @@
 import { useState } from 'react'
-import Card from './Card'
 import Button from './Button'
-import Input from './Input'
 import type { Category } from '../lib/types'
 
 interface CategoryManagerProps {
@@ -11,88 +9,86 @@ interface CategoryManagerProps {
   onUpdateCategory: (id: string, name: string, color: string) => void
 }
 
+const PALETTE = [
+  '#38bdf8', '#22c55e', '#8b5cf6', '#f59e0b',
+  '#f43f5e', '#06b6d4', '#6366f1', '#ec4899',
+]
+
 export default function CategoryManager({
   categories,
   onAddCategory,
   onDeleteCategory,
 }: CategoryManagerProps) {
   const [showForm, setShowForm] = useState(false)
-  const [name, setName] = useState('')
-  const [color, setColor] = useState('blue')
-
-  const colors = ['red', 'blue', 'green', 'yellow', 'purple', 'pink', 'indigo', 'cyan']
+  const [name, setName]         = useState('')
+  const [color, setColor]       = useState(PALETTE[0])
 
   const handleAdd = () => {
     if (name.trim()) {
-      onAddCategory(name, color)
+      onAddCategory(name.trim(), color)
       setName('')
-      setColor('blue')
+      setColor(PALETTE[0])
       setShowForm(false)
     }
   }
 
   return (
-    <Card className="space-y-3">
+    <div className="px-5 pb-5 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="font-bold text-text-primary">Kategorien</h3>
-        <Button variant="secondary" size="sm" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Abbrechen' : '+ Kategorie'}
+        <h2 className="text-base font-semibold text-[#f1f5f9]">Kategorien</h2>
+        <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
+          {showForm ? 'Abbrechen' : '+ Hinzufügen'}
         </Button>
       </div>
 
       {showForm && (
-        <div className="space-y-2 p-3 bg-bg-primary rounded border border-border-subtle">
-          <Input
+        <div className="bg-[#0d1f35] rounded-2xl border border-[#1e3a52] p-4 space-y-3">
+          <input
             placeholder="Kategoriename"
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
+            onChange={e => setName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAdd()}
+            className="w-full bg-[#162d47] border border-[#1e3a52] rounded-xl px-3 py-2 text-sm text-[#f1f5f9] placeholder-[#64748b]/60 focus:outline-none focus:border-[#38bdf8]"
+            autoFocus
           />
           <div className="flex gap-2 flex-wrap">
-            {colors.map((c) => (
+            {PALETTE.map(p => (
               <button
-                key={c}
-                onClick={() => setColor(c)}
-                className={`w-6 h-6 rounded-full transition-all ${color === c ? 'ring-2 ring-accent-primary' : ''}`}
+                key={p}
+                onClick={() => setColor(p)}
+                className="w-7 h-7 rounded-full transition-transform"
                 style={{
-                  backgroundColor:
-                    {
-                      red: '#ef4444',
-                      blue: '#3b82f6',
-                      green: '#22c55e',
-                      yellow: '#eab308',
-                      purple: '#a855f7',
-                      pink: '#ec4899',
-                      indigo: '#6366f1',
-                      cyan: '#06b6d4',
-                    }[c] || '#6b7280',
+                  backgroundColor: p,
+                  transform: color === p ? 'scale(1.25)' : 'scale(1)',
+                  boxShadow: color === p ? `0 0 0 2px #0d1f35, 0 0 0 4px ${p}` : 'none',
                 }}
               />
             ))}
           </div>
-          <Button variant="primary" size="sm" onClick={handleAdd}>
-            Hinzufügen
-          </Button>
+          <Button variant="primary" size="sm" onClick={handleAdd}>Speichern</Button>
         </div>
       )}
 
       <div className="flex flex-wrap gap-2">
-        {categories.map((cat) => (
+        {categories.map(cat => (
           <div
             key={cat.id}
-            className="flex items-center gap-2 px-3 py-1 rounded-full text-sm"
-            style={{ backgroundColor: cat.color + '20', borderLeft: `3px solid ${cat.color}` }}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium"
+            style={{ backgroundColor: cat.color + '18', color: cat.color, border: `1px solid ${cat.color}30` }}
           >
-            <span className="text-text-primary">{cat.name}</span>
+            <span>{cat.name}</span>
             <button
               onClick={() => onDeleteCategory(cat.id)}
-              className="text-text-muted hover:text-accent-danger transition ml-1"
+              className="opacity-50 hover:opacity-100 transition-opacity text-sm leading-none ml-0.5"
             >
-              ✕
+              ×
             </button>
           </div>
         ))}
+        {categories.length === 0 && (
+          <p className="text-sm text-[#64748b]">Noch keine Kategorien.</p>
+        )}
       </div>
-    </Card>
+    </div>
   )
 }

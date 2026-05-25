@@ -1,7 +1,4 @@
 import { useMemo } from 'react'
-import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-} from 'recharts'
 import type { Task, Habit, HabitCheck, Category } from '../lib/types'
 import { toDateString } from '../lib/dates'
 
@@ -13,167 +10,132 @@ interface DashboardProps {
   selectedDate: string | Date
 }
 
+interface RingProps {
+  percentage: number
+  color: string
+  size?: number
+}
+
+function Ring({ percentage, color, size = 72 }: RingProps) {
+  const r = 28
+  const circ = 2 * Math.PI * r
+  const offset = circ * (1 - Math.min(percentage, 100) / 100)
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 64 64">
+      <circle cx="32" cy="32" r={r} fill="none" stroke="#1e3a52" strokeWidth="6" />
+      <circle
+        cx="32" cy="32" r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth="6"
+        strokeDasharray={circ}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        transform="rotate(-90 32 32)"
+        style={{ transition: 'stroke-dashoffset 0.5s ease' }}
+      />
+    </svg>
+  )
+}
+
 export default function Dashboard({
   tasks,
   habits,
   habitChecks,
   categories,
-  selectedDate
+  selectedDate,
 }: DashboardProps) {
   const selectedDateStr = typeof selectedDate === 'string'
     ? selectedDate
     : toDateString(selectedDate)
 
   const taskStats = useMemo(() => {
-    const done = tasks.filter(t => t.status === 'done').length
-    const total = tasks.length || 1
-    return { done, total, percentage: Math.round((done / total) * 100) }
-  }, [tasks])
+    const relevant = tasks.filter(t =>
+      t.status === 'open' ||
+      (t.status === 'done' && t.completed_date === selectedDateStr)
+    )
+    const done = tasks.filter(t => t.status === 'done' && t.completed_date === selectedDateStr).length
+    const total = relevant.length || 1
+    return { done, total: relevant.length, percentage: Math.round((done / total) * 100) }
+  }, [tasks, selectedDateStr])
 
   const habitStats = useMemo(() => {
     const done = habitChecks.filter(hc => hc.date === selectedDateStr).length
-    const total = habits.length || 1
-    return { done, total, percentage: Math.round((done / total) * 100) }
+    const total = habits.filter(h => h.is_active).length || 1
+    return { done, total: habits.filter(h => h.is_active).length, percentage: Math.round((done / total) * 100) }
   }, [habitChecks, habits, selectedDateStr])
 
-  const weeklyHabitData = useMemo(() => {
-    const selectedDateObj = typeof selectedDate === 'string'
-      ? new Date(selectedDate + 'T00:00:00')
-      : selectedDate
-    const dates = []
-    for (let i = 6; i >= 0; i--) {
-      const day = new Date(selectedDateObj.getTime() - i * 24 * 60 * 60 * 1000)
-      const dateStr = toDateString(day)
-      const count = habitChecks.filter(hc => hc.date === dateStr).length
-      dates.push({
-        date: day.toLocaleDateString('de-DE', { weekday: 'short' }),
-        Gewohnheiten: count
-      })
-    }
-    return dates
-  }, [habitChecks, selectedDate, selectedDateStr])
-
-  const taskCategoryData = useMemo(() => {
+  const categoryBreakdown = useMemo(() => {
     const counts: Record<string, number> = {}
-    tasks.forEach(task => {
+    tasks.filter(t => t.status === 'open').forEach(task => {
       const cat = categories.find(c => c.id === task.category_id)?.name ?? 'Sonstiges'
       counts[cat] = (counts[cat] || 0) + 1
     })
-    return Object.entries(counts).map(([name, value]) => ({ name, value }))
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4)
   }, [tasks, categories])
 
-  const COLORS = ['#38bdf8', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+  const openCount = tasks.filter(t => t.status === 'open').length
+  const estimatedMin = tasks.filter(t => t.status === 'open').reduce((s, t) => s + (t.estimated_minutes || 0), 0)
 
   return (
-    <div className="space-y-6">
-      {/* Statistik Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Task Completion */}
-        <div className="bg-gradient-to-br from-bg-secondary to-bg-primary rounded-2xl p-6 border border-border-subtle shadow-lg hover:shadow-xl transition-shadow">
-          <h3 className="text-lg font-semibold text-text-primary mb-4">Aufgaben heute</h3>
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="text-4xl font-bold text-accent mb-2">{taskStats.percentage}%</div>
-              <div className="text-sm text-text-secondary">{taskStats.done} von {taskStats.total} erledigt</div>
-            </div>
-            <div className="w-20 h-20">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'Erledigt', value: taskStats.done },
-                      { name: 'Offen', value: Math.max(0, taskStats.total - taskStats.done) }
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={25}
-                    outerRadius={40}
-                    dataKey="value"
-                  >
-                    <Cell fill="#38bdf8" />
-                    <Cell fill="#10243d" />
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+    <div className="px-5 py-4 space-y-4">
+      {/* Progress rings */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-[#0d1f35] rounded-2xl border border-[#1e3a52] p-4 flex items-center gap-4">
+          <Ring percentage={taskStats.percentage} color="#38bdf8" />
+          <div>
+            <p className="text-[#64748b] text-xs font-medium uppercase tracking-wide">Aufgaben</p>
+            <p className="text-2xl font-bold text-[#f1f5f9] mt-0.5">{taskStats.percentage}%</p>
+            <p className="text-[#64748b] text-xs mt-0.5">{taskStats.done}/{taskStats.total}</p>
           </div>
         </div>
 
-        {/* Habit Completion */}
-        <div className="bg-gradient-to-br from-bg-secondary to-bg-primary rounded-2xl p-6 border border-border-subtle shadow-lg hover:shadow-xl transition-shadow">
-          <h3 className="text-lg font-semibold text-text-primary mb-4">Gewohnheiten heute</h3>
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="text-4xl font-bold text-success mb-2">{habitStats.percentage}%</div>
-              <div className="text-sm text-text-secondary">{habitStats.done} von {habitStats.total} abgehakt</div>
-            </div>
-            <div className="w-20 h-20">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'Erledigt', value: habitStats.done },
-                      { name: 'Offen', value: Math.max(0, habitStats.total - habitStats.done) }
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={25}
-                    outerRadius={40}
-                    dataKey="value"
-                  >
-                    <Cell fill="#22c55e" />
-                    <Cell fill="#10243d" />
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
+        <div className="bg-[#0d1f35] rounded-2xl border border-[#1e3a52] p-4 flex items-center gap-4">
+          <Ring percentage={habitStats.percentage} color="#22c55e" />
+          <div>
+            <p className="text-[#64748b] text-xs font-medium uppercase tracking-wide">Habits</p>
+            <p className="text-2xl font-bold text-[#f1f5f9] mt-0.5">{habitStats.percentage}%</p>
+            <p className="text-[#64748b] text-xs mt-0.5">{habitStats.done}/{habitStats.total}</p>
           </div>
         </div>
       </div>
 
-      {/* Wöchlicher Überblick */}
-      <div className="bg-gradient-to-br from-bg-secondary to-bg-primary rounded-2xl p-6 border border-border-subtle shadow-lg">
-        <h3 className="text-lg font-semibold text-text-primary mb-4">Wöchentlicher Fortschritt</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={weeklyHabitData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#38bdf8" opacity={0.2} />
-            <XAxis dataKey="date" stroke="#a0aec0" />
-            <YAxis stroke="#a0aec0" />
-            <Tooltip
-              contentStyle={{ backgroundColor: '#10243d', border: '1px solid #38bdf8', borderRadius: '8px' }}
-              labelStyle={{ color: '#38bdf8' }}
-            />
-            <Bar dataKey="Gewohnheiten" fill="#38bdf8" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      {/* Quick stats row */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-[#0d1f35] rounded-xl border border-[#1e3a52] px-4 py-3">
+          <p className="text-[#64748b] text-xs">Offene Tasks</p>
+          <p className="text-xl font-bold text-[#38bdf8]">{openCount}</p>
+        </div>
+        <div className="bg-[#0d1f35] rounded-xl border border-[#1e3a52] px-4 py-3">
+          <p className="text-[#64748b] text-xs">Geschätzter Aufwand</p>
+          <p className="text-xl font-bold text-[#f97316]">{estimatedMin > 0 ? `${estimatedMin} min` : '—'}</p>
+        </div>
       </div>
 
-      {/* Aufgaben nach Kategorie */}
-      {taskCategoryData.length > 0 && (
-        <div className="bg-gradient-to-br from-bg-secondary to-bg-primary rounded-2xl p-6 border border-border-subtle shadow-lg">
-          <h3 className="text-lg font-semibold text-text-primary mb-4">Aufgaben nach Kategorie</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={taskCategoryData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, value }) => `${name} (${value})`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {taskCategoryData.map((_, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{ backgroundColor: '#10243d', border: '1px solid #38bdf8', borderRadius: '8px' }}
-                labelStyle={{ color: '#38bdf8' }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
+      {/* Category breakdown */}
+      {categoryBreakdown.length > 0 && (
+        <div className="bg-[#0d1f35] rounded-2xl border border-[#1e3a52] p-4">
+          <p className="text-[#64748b] text-xs font-medium uppercase tracking-wide mb-3">Nach Kategorie</p>
+          <div className="space-y-2.5">
+            {categoryBreakdown.map(([name, count]) => {
+              const maxCount = categoryBreakdown[0][1]
+              return (
+                <div key={name}>
+                  <div className="flex justify-between text-xs mb-1">
+                    <span className="text-[#f1f5f9]">{name}</span>
+                    <span className="text-[#64748b]">{count}</span>
+                  </div>
+                  <div className="h-1.5 bg-[#1e3a52] rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-[#38bdf8] transition-all"
+                      style={{ width: `${(count / maxCount) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
     </div>

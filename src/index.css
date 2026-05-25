@@ -1,89 +1,79 @@
+@import "tailwindcss";
+
 :root {
-  --color-bg-primary: #071525;      /* Navy */
-  --color-bg-secondary: #10243d;    /* Dunkles Blaugrau */
-  --color-bg-tertiary: #132b49;     /* Secondary */
-  --color-border: #1e3a52;          /* Subtil */
-  --color-text-primary: #f8f9fa;    /* Fast weiß */
-  --color-text-muted: #8b95a8;      /* Graulich */
-  --color-accent: #38bdf8;          /* Hellblau */
-  --color-success: #22c55e;         /* Grün */
-  --color-warning: #f97316;         /* Orange */
-  --color-danger: #ef4444;          /* Rot */
+  --color-bg-base:      #071525;
+  --color-bg-card:      #0d1f35;
+  --color-bg-elevated:  #162d47;
+  --color-border:       #1e3a52;
+  --color-border-focus: #38bdf8;
+  --color-text-primary: #f1f5f9;
+  --color-text-muted:   #64748b;
+  --color-text-subtle:  #94a3b8;
+  --color-accent:       #38bdf8;
+  --color-success:      #22c55e;
+  --color-warning:      #f97316;
+  --color-danger:       #ef4444;
 }
 
-* {
-  box-sizing: border-box;
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  margin: 0;
-  padding: 0;
-  background-color: var(--color-bg-primary);
+  background-color: var(--color-bg-base);
   color: var(--color-text-primary);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
   font-size: 16px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
 }
 
-#root {
-  min-height: 100vh;
-  width: 100%;
-}
+h1, h2, h3, h4 { margin: 0; font-weight: 600; letter-spacing: -0.02em; }
+p { margin: 0; }
 
-h1, h2, h3 {
-  margin: 0;
-  font-weight: 600;
-}
-
-h1 {
-  font-size: 28px;
-}
-
-h2 {
-  font-size: 22px;
-}
-
-h3 {
-  font-size: 18px;
-}
-
-p {
-  margin: 0;
-}
-
-button {
-  cursor: pointer;
-  font-family: inherit;
-  border: none;
-  font-size: inherit;
-}
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
 
 input, textarea, select {
   font-family: inherit;
   font-size: inherit;
   color: var(--color-text-primary);
-  background-color: var(--color-bg-secondary);
+  background-color: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
-  padding: 8px 12px;
-  border-radius: 6px;
+  border-radius: 10px;
+  padding: 10px 14px;
+  width: 100%;
+  transition: border-color 0.15s;
 }
 
 input:focus, textarea:focus, select:focus {
   outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.1);
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
 }
 
-textarea {
-  resize: vertical;
+textarea { resize: vertical; }
+
+/* Safe area for iPhone */
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Smooth checkbox */
+input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  accent-color: var(--color-accent);
+  padding: 0;
+  border: 1.5px solid var(--color-border);
 }
 
-@media (max-width: 768px) {
-  h1 {
-    font-size: 24px;
-  }
-  h2 {
-    font-size: 20px;
-  }
+/* Date input icon color */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.6);
+  cursor: pointer;
 }
