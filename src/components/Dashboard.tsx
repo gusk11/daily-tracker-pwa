@@ -1,14 +1,15 @@
-import React, { useMemo } from 'react'
+import { useMemo } from 'react'
 import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
-import type { Task, Habit, HabitCheck } from '../lib/types'
-import { toDateString, addDays } from '../lib/dates'
+import type { Task, Habit, HabitCheck, Category } from '../lib/types'
+import { toDateString } from '../lib/dates'
 
 interface DashboardProps {
   tasks: Task[]
   habits: Habit[]
   habitChecks: HabitCheck[]
+  categories: Category[]
   selectedDate: string | Date
 }
 
@@ -16,6 +17,7 @@ export default function Dashboard({
   tasks,
   habits,
   habitChecks,
+  categories,
   selectedDate
 }: DashboardProps) {
   const selectedDateStr = typeof selectedDate === 'string'
@@ -52,13 +54,13 @@ export default function Dashboard({
   }, [habitChecks, selectedDate, selectedDateStr])
 
   const taskCategoryData = useMemo(() => {
-    const categories: Record<string, number> = {}
+    const counts: Record<string, number> = {}
     tasks.forEach(task => {
-      const cat = task.category || 'Sonstiges'
-      categories[cat] = (categories[cat] || 0) + 1
+      const cat = categories.find(c => c.id === task.category_id)?.name ?? 'Sonstiges'
+      counts[cat] = (counts[cat] || 0) + 1
     })
-    return Object.entries(categories).map(([name, value]) => ({ name, value }))
-  }, [tasks])
+    return Object.entries(counts).map(([name, value]) => ({ name, value }))
+  }, [tasks, categories])
 
   const COLORS = ['#38bdf8', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
 

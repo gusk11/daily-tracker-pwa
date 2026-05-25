@@ -26,6 +26,7 @@ export default function App() {
             tasks={store.tasks}
             habits={store.habits}
             habitChecks={store.habitChecks}
+            categories={store.categories}
             selectedDate={store.selectedDate}
           />
 
