@@ -47,7 +47,7 @@ export default function HabitTracker({
       </div>
 
       {showForm && (
-        <div className="space-y-3 p-4 bg-bg-primary rounded-lg border border-border-subtle">
+        <div className="space-y-3 p-5 bg-gradient-to-br from-bg-primary to-bg-secondary rounded-xl border border-border-subtle shadow-md">
           <Input
             placeholder="Gewohnheit (z.B. Meditation)"
             value={name}
@@ -55,13 +55,13 @@ export default function HabitTracker({
             onKeyPress={(e) => e.key === 'Enter' && handleAdd()}
           />
           <div>
-            <label className="block text-sm font-medium text-text-muted mb-2">Farbe</label>
-            <div className="flex gap-2 flex-wrap">
+            <label className="block text-sm font-semibold text-text-primary mb-3">Farbe wählen</label>
+            <div className="flex gap-3 flex-wrap">
               {colors.map((c) => (
                 <button
                   key={c}
                   onClick={() => setColor(c)}
-                  className={`w-8 h-8 rounded-full transition-all ${color === c ? 'ring-2 ring-accent-primary' : ''}`}
+                  className={`w-10 h-10 rounded-full transition-all duration-200 transform hover:scale-110 ${color === c ? 'ring-3 ring-accent scale-110' : 'hover:shadow-lg'}`}
                   style={{
                     backgroundColor:
                       {
@@ -85,7 +85,7 @@ export default function HabitTracker({
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {habits.map((habit) => {
           const isChecked = habitChecks.some(
             (c) => c.habit_id === habit.id && c.date === selectedDate && c.checked
@@ -94,23 +94,27 @@ export default function HabitTracker({
           return (
             <div
               key={habit.id}
-              className="p-3 bg-bg-primary rounded-lg border border-border-subtle flex items-center justify-between"
+              className={`p-4 rounded-xl border-2 transition-all duration-200 flex items-center justify-between shadow-md hover:shadow-lg ${
+                isChecked
+                  ? 'bg-gradient-to-r from-success/10 to-success/5 border-success'
+                  : 'bg-gradient-to-br from-bg-primary to-bg-secondary border-border-subtle hover:border-accent'
+              }`}
             >
               <div className="flex items-center gap-3 flex-1">
                 <input
                   type="checkbox"
                   checked={isChecked}
                   onChange={() => onToggleCheck(habit.id, selectedDate)}
-                  className="w-5 h-5 rounded cursor-pointer"
+                  className="w-6 h-6 rounded-lg cursor-pointer"
                   style={{ accentColor: habit.color }}
                 />
-                <span className={isChecked ? 'line-through text-text-muted' : 'text-text-primary'}>
+                <span className={`font-medium transition-all ${isChecked ? 'line-through text-text-muted' : 'text-text-primary'}`}>
                   {habit.name}
                 </span>
               </div>
               <button
                 onClick={() => onDeleteHabit(habit.id)}
-                className="text-text-muted hover:text-accent-danger transition text-sm"
+                className="text-text-muted hover:text-accent-danger transition duration-200 text-lg hover:scale-125"
               >
                 ✕
               </button>

@@ -12,13 +12,13 @@ export default function Button({
   className = '',
   ...props
 }: ButtonProps) {
-  const baseClasses = 'font-medium rounded-lg transition-colors duration-200'
+  const baseClasses = 'font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95'
 
   const variantClasses = {
-    primary: 'bg-accent-primary text-bg-primary hover:bg-cyan-600',
-    secondary: 'bg-bg-secondary text-text-primary hover:bg-bg-tertiary border border-border-subtle',
-    danger: 'bg-accent-danger text-white hover:bg-red-600',
-    success: 'bg-accent-success text-bg-primary hover:bg-green-600',
+    primary: 'bg-gradient-to-br from-accent to-cyan-600 text-bg-primary hover:from-cyan-500 hover:to-cyan-700',
+    secondary: 'bg-gradient-to-br from-bg-secondary to-bg-primary text-text-primary hover:bg-bg-tertiary border border-border-subtle',
+    danger: 'bg-gradient-to-br from-accent-danger to-red-600 text-white hover:from-red-500 hover:to-red-700',
+    success: 'bg-gradient-to-br from-success to-green-600 text-bg-primary hover:from-green-500 hover:to-green-700',
   }
 
   const sizeClasses = {
