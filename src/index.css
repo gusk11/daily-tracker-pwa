@@ -1,0 +1,89 @@
+:root {
+  --color-bg-primary: #071525;      /* Navy */
+  --color-bg-secondary: #10243d;    /* Dunkles Blaugrau */
+  --color-bg-tertiary: #132b49;     /* Secondary */
+  --color-border: #1e3a52;          /* Subtil */
+  --color-text-primary: #f8f9fa;    /* Fast weiß */
+  --color-text-muted: #8b95a8;      /* Graulich */
+  --color-accent: #38bdf8;          /* Hellblau */
+  --color-success: #22c55e;         /* Grün */
+  --color-warning: #f97316;         /* Orange */
+  --color-danger: #ef4444;          /* Rot */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+h1, h2, h3 {
+  margin: 0;
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 28px;
+}
+
+h2 {
+  font-size: 22px;
+}
+
+h3 {
+  font-size: 18px;
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  font-size: inherit;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.1);
+}
+
+textarea {
+  resize: vertical;
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 24px;
+  }
+  h2 {
+    font-size: 20px;
+  }
+}
