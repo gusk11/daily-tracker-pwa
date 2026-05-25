@@ -127,6 +127,7 @@ export default function App() {
               onAddHabit={store.addHabit}
               onDeleteHabit={store.deleteHabit}
               onUpdateHabit={store.updateHabit}
+              manageMode
             />
             <div className="border-t border-[#1e3a52] my-2" />
             <CategoryManager

@@ -10,6 +10,7 @@ interface HabitTrackerProps {
   onAddHabit: (name: string, color: string) => void
   onDeleteHabit: (id: string) => void
   onUpdateHabit: (id: string, name: string, color: string) => void
+  manageMode?: boolean
 }
 
 const PALETTE = [
@@ -28,6 +29,7 @@ export default function HabitTracker({
   onToggleCheck,
   onAddHabit,
   onDeleteHabit,
+  manageMode = false,
 }: HabitTrackerProps) {
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
@@ -46,9 +48,11 @@ export default function HabitTracker({
     <div className="px-5 pb-4">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-base font-semibold text-[#f1f5f9]">Gewohnheiten</h2>
-        <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
-          {showForm ? 'Abbrechen' : '+ Hinzufügen'}
-        </Button>
+        {manageMode && (
+          <Button variant="ghost" size="sm" onClick={() => setShowForm(!showForm)}>
+            {showForm ? 'Abbrechen' : '+ Hinzufügen'}
+          </Button>
+        )}
       </div>
 
       {showForm && (
@@ -109,19 +113,23 @@ export default function HabitTracker({
                 {habit.name}
               </span>
 
-              <button
-                onClick={() => onDeleteHabit(habit.id)}
-                className="text-[#1e3a52] hover:text-[#64748b] transition-colors ml-1 text-lg leading-none"
-              >
-                ×
-              </button>
+              {manageMode && (
+                <button
+                  onClick={() => onDeleteHabit(habit.id)}
+                  className="text-[#1e3a52] hover:text-[#64748b] transition-colors ml-1 text-lg leading-none"
+                >
+                  ×
+                </button>
+              )}
             </div>
           )
         })}
       </div>
 
-      {habits.length === 0 && !showForm && (
-        <p className="text-center text-[#64748b] text-sm py-6">Noch keine Gewohnheiten.</p>
+      {habits.length === 0 && (
+        <p className="text-center text-[#64748b] text-sm py-6">
+          {manageMode ? 'Noch keine Gewohnheiten.' : 'Keine Gewohnheiten vorhanden. Im Tab "Verwalten" hinzufügen.'}
+        </p>
       )}
     </div>
   )
