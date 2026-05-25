@@ -50,15 +50,20 @@ export default function Dashboard({
     ? selectedDate
     : toDateString(selectedDate)
 
-  const taskStats = useMemo(() => {
-    const relevant = tasks.filter(t =>
-      t.status === 'open' ||
-      (t.status === 'done' && t.completed_date === selectedDateStr)
-    )
-    const done = tasks.filter(t => t.status === 'done' && t.completed_date === selectedDateStr).length
-    const total = relevant.length || 1
-    return { done, total: relevant.length, percentage: Math.round((done / total) * 100) }
+  const todayTasks = useMemo(() => {
+    const plannedToday = tasks.filter(t => {
+      if (t.status === 'done') return t.completed_date === selectedDateStr
+      if (t.planned_date) return t.planned_date === selectedDateStr
+      return !t.due_date || t.due_date === selectedDateStr
+    })
+    return plannedToday
   }, [tasks, selectedDateStr])
+
+  const taskStats = useMemo(() => {
+    const done = todayTasks.filter(t => t.status === 'done').length
+    const total = todayTasks.length || 1
+    return { done, total: todayTasks.length, percentage: Math.round((done / total) * 100) }
+  }, [todayTasks])
 
   const habitStats = useMemo(() => {
     const done = habitChecks.filter(hc => hc.date === selectedDateStr).length
@@ -68,15 +73,15 @@ export default function Dashboard({
 
   const categoryBreakdown = useMemo(() => {
     const counts: Record<string, number> = {}
-    tasks.filter(t => t.status === 'open').forEach(task => {
+    todayTasks.filter(t => t.status === 'open').forEach(task => {
       const cat = categories.find(c => c.id === task.category_id)?.name ?? 'Sonstiges'
       counts[cat] = (counts[cat] || 0) + 1
     })
     return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4)
-  }, [tasks, categories])
+  }, [todayTasks, categories])
 
-  const openCount = tasks.filter(t => t.status === 'open').length
-  const estimatedMin = tasks.filter(t => t.status === 'open').reduce((s, t) => s + (t.estimated_minutes || 0), 0)
+  const openCount = todayTasks.filter(t => t.status === 'open').length
+  const estimatedMin = todayTasks.filter(t => t.status === 'open').reduce((s, t) => s + (t.estimated_minutes || 0), 0)
 
   return (
     <div className="px-5 py-4 space-y-4">
