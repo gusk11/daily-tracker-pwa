@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import type { DailyReview as DailyReviewType } from '../lib/types'
-import { debounce } from '../lib/utils'
 
 interface DailyReviewProps {
   selectedDate: string
@@ -8,18 +7,21 @@ interface DailyReviewProps {
   onSaveReview: (date: string, review: Partial<DailyReviewType>) => void
 }
 
-interface FieldProps {
+function Field({
+  label,
+  placeholder,
+  value,
+  onChange,
+  rows = 2,
+}: {
   label: string
   placeholder: string
   value: string
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
   rows?: number
-  className?: string
-}
-
-function Field({ label, placeholder, value, onChange, rows = 2, className = '' }: FieldProps) {
+}) {
   return (
-    <div className={className}>
+    <div>
       <label className="block text-xs font-medium text-[#64748b] mb-1.5 uppercase tracking-wide">{label}</label>
       <textarea
         placeholder={placeholder}
@@ -32,11 +34,7 @@ function Field({ label, placeholder, value, onChange, rows = 2, className = '' }
   )
 }
 
-export default function DailyReview({
-  selectedDate,
-  review,
-  onSaveReview,
-}: DailyReviewProps) {
+export default function DailyReview({ selectedDate, review, onSaveReview }: DailyReviewProps) {
   const [insight, setInsight]     = useState('')
   const [question, setQuestion]   = useState('')
   const [brainDump, setBrainDump] = useState('')
@@ -46,35 +44,61 @@ export default function DailyReview({
     setInsight(review?.insight || '')
     setQuestion(review?.question || '')
     setBrainDump(review?.brain_dump || '')
-  }, [selectedDate, review])
+    setSaved(false)
+  }, [selectedDate, review?.id])
 
-  const saveReview = debounce(() => {
+  const handleSave = () => {
     onSaveReview(selectedDate, {
-      insight:    insight || undefined,
-      question:   question || undefined,
-      brain_dump: brainDump || undefined,
+      insight:    insight.trim() || undefined,
+      question:   question.trim() || undefined,
+      brain_dump: brainDump.trim() || undefined,
     })
     setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-  }, 1000)
-
-  const handle = (setter: (v: string) => void) => (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setter(e.target.value)
-    saveReview()
+    setTimeout(() => setSaved(false), 2500)
   }
+
+  const hasContent = insight.trim() || question.trim() || brainDump.trim()
 
   return (
     <div className="px-5 pb-5 space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-[#f1f5f9]">Tagesrückblick</h2>
-        {saved && <span className="text-xs text-[#22c55e]">Gespeichert</span>}
-      </div>
+      <h2 className="text-base font-semibold text-[#f1f5f9]">Tagesrückblick</h2>
 
       <div className="space-y-3">
-        <Field label="Erkenntnis von heute" placeholder="Was habe ich heute gelernt?" value={insight} onChange={handle(setInsight)} />
-        <Field label="Offene Fragen" placeholder="Was beschäftigt mich noch?" value={question} onChange={handle(setQuestion)} />
-        <Field label="Brain Dump" placeholder="Alles raus — Gedanken, Ideen, To-Dos..." value={brainDump} onChange={handle(setBrainDump)} rows={4} />
+        <Field
+          label="Erkenntnis von heute"
+          placeholder="Was habe ich heute gelernt?"
+          value={insight}
+          onChange={e => setInsight(e.target.value)}
+        />
+        <Field
+          label="Offene Fragen"
+          placeholder="Was beschäftigt mich noch?"
+          value={question}
+          onChange={e => setQuestion(e.target.value)}
+        />
+        <Field
+          label="Brain Dump"
+          placeholder="Alles raus — Gedanken, Ideen, To-Dos..."
+          value={brainDump}
+          onChange={e => setBrainDump(e.target.value)}
+          rows={4}
+        />
       </div>
+
+      <button
+        onClick={handleSave}
+        disabled={!hasContent}
+        className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all"
+        style={
+          saved
+            ? { backgroundColor: '#22c55e20', color: '#22c55e', border: '1px solid #22c55e40' }
+            : hasContent
+            ? { backgroundColor: '#38bdf820', color: '#38bdf8', border: '1px solid #38bdf840' }
+            : { backgroundColor: '#162d47', color: '#64748b', border: '1px solid #1e3a52', cursor: 'not-allowed' }
+        }
+      >
+        {saved ? '✓ Gespeichert & zum Wochenrückblick hinzugefügt' : 'Speichern'}
+      </button>
     </div>
   )
 }

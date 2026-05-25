@@ -86,14 +86,21 @@ export const getWeekStats = (
     habitStats[habit.id] = { completed: totalCompleted, total: totalDays }
   }
 
-  // Insights and questions from week
-  const weekInsights: { date: string; text: string }[] = []
+  // Daily reviews for the week (all fields combined)
+  const weekInsights: { date: string; insight?: string; question?: string; brainDump?: string }[] = []
   const weekQuestions: { date: string; text: string }[] = []
   const weekFocuses: { date: string; text: string }[] = []
 
   for (const review of reviews) {
     if (review.date >= weekStart && review.date <= weekEnd) {
-      if (review.insight) weekInsights.push({ date: review.date, text: review.insight })
+      if (review.insight || review.question || review.brain_dump) {
+        weekInsights.push({
+          date: review.date,
+          insight: review.insight,
+          question: review.question,
+          brainDump: review.brain_dump,
+        })
+      }
       if (review.question) weekQuestions.push({ date: review.date, text: review.question })
       if (review.tomorrow_focus) weekFocuses.push({ date: review.date, text: review.tomorrow_focus })
     }

@@ -81,12 +81,29 @@ export default function WeeklyReview({
 
       {stats.weekInsights.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wide text-[#64748b]">Erkenntnisse</p>
-          <div className="space-y-1.5">
+          <p className="text-xs font-medium uppercase tracking-wide text-[#64748b]">Tagesrückblicke</p>
+          <div className="space-y-2">
             {stats.weekInsights.map((item, i) => (
-              <div key={i} className="bg-[#0d1f35] rounded-xl border border-[#1e3a52] px-4 py-3">
-                <p className="text-xs text-[#64748b] mb-1">{item.date}</p>
-                <p className="text-sm text-[#f1f5f9]">{item.text}</p>
+              <div key={i} className="bg-[#0d1f35] rounded-xl border border-[#1e3a52] px-4 py-3 space-y-2.5">
+                <p className="text-xs text-[#38bdf8] font-medium">{item.date}</p>
+                {item.insight && (
+                  <div>
+                    <p className="text-xs text-[#64748b] uppercase tracking-wide mb-0.5">Erkenntnis</p>
+                    <p className="text-sm text-[#f1f5f9]">{item.insight}</p>
+                  </div>
+                )}
+                {item.question && (
+                  <div>
+                    <p className="text-xs text-[#64748b] uppercase tracking-wide mb-0.5">Offene Frage</p>
+                    <p className="text-sm text-[#f1f5f9]">{item.question}</p>
+                  </div>
+                )}
+                {item.brainDump && (
+                  <div>
+                    <p className="text-xs text-[#64748b] uppercase tracking-wide mb-0.5">Brain Dump</p>
+                    <p className="text-sm text-[#f1f5f9] whitespace-pre-wrap">{item.brainDump}</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
